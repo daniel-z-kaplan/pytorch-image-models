@@ -410,6 +410,7 @@ class Eva(nn.Module):
         self.num_prefix_tokens = 1 if class_token else 0
         self.dynamic_img_size = dynamic_img_size
         self.grad_checkpointing = False
+        self.output_tokens = False
 
         embed_args = {}
         if dynamic_img_size:
@@ -577,9 +578,13 @@ class Eva(nn.Module):
         return x if pre_logits else self.head(x)
 
     def forward(self, x):
-        x = self.forward_features(x)
-        x = self.forward_head(x)
-        return x
+        tokens = self.forward_features(x)
+        pooled = self.forward_head(tokens)
+
+        if self.output_tokens:
+          return pooled, tokens
+        else:
+          return pooled
 
 
 def checkpoint_filter_fn(
